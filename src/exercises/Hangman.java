@@ -4,7 +4,11 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -13,23 +17,45 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-public class Hangman extends KeyAdapter {
+import examples.FileHelper;
 
+public class Hangman extends KeyAdapter {
+	private Pattern pattern;
+	private Matcher matcher;
 	Stack<String> puzzles = new Stack<String>();
 	ArrayList<JLabel> boxes = new ArrayList<JLabel>();
-	int lives = 9;
+	static int lives = 9;
 	JLabel livesLabel = new JLabel("" + lives);
 
 	public static void main(String[] args) {
+
 		Hangman hangman = new Hangman();
-		hangman.addPuzzles();
+
+		try {
+			hangman.addPuzzles();
+		} catch (Exception e) {
+
+			e.getMessage();
+		}
 		hangman.createUI();
 	}
 
-	private void addPuzzles() {
-		puzzles.push("defenestrate");
-		puzzles.push("fancypants");
-		puzzles.push("elements");
+	private void addPuzzles() throws Exception {
+		List<String> words = FileHelper.loadFileContentsIntoArrayList("resource/words.txt");
+		Random random = new Random();
+		String word = words.get(random.nextInt(words.size()));
+		String regex = "\\p{Punct}";
+		pattern = Pattern.compile(regex);
+		matcher = pattern.matcher(word);
+
+		if (matcher.matches()) {
+
+			throw new Exception("Special character is found, not a legal word");
+
+		} else {
+
+			puzzles.push(word);
+		}
 	}
 
 	JPanel panel = new JPanel();
@@ -54,6 +80,7 @@ public class Hangman extends KeyAdapter {
 		puzzle = puzzles.pop();
 		System.out.println("puzzle is now " + puzzle);
 		createBoxes();
+
 	}
 
 	public void keyTyped(KeyEvent arg0) {
@@ -91,7 +118,7 @@ public class Hangman extends KeyAdapter {
 		}
 		boxes.clear();
 	}
-	
+
 	public void playDeathKnell() {
 		try {
 			AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("resource/funeral-march.wav"));
@@ -103,6 +130,7 @@ public class Hangman extends KeyAdapter {
 			ex.printStackTrace();
 		}
 	}
+	
 
 }
 
